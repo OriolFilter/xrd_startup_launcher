@@ -1,2 +1,6 @@
 /venv/
 /xrd_executable_list.json
+/binary_dump/xrd_startup_launcher.exe
+/xrd_startup_launcher.exe.spec
+/build/
+/.idea/
