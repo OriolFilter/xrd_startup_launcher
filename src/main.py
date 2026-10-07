@@ -6,9 +6,22 @@ from dataclasses import dataclass, field
 from json import loads
 
 
+class WorkdirNotFoundOrInvalid(Exception):
+    """
+    Raised when the workdir is not located by the Tool class, or isn't a directory.
+    """
+
+
+class ExecutableNotFoundOrInvalid(Exception):
+    """
+    Raised when the workdir is not located by the Tool class, or isn't a file.
+    """
+
+
 @dataclass()
 class Tool:
     mod_name: str
+    workdir: str
     executable_path: str
     arguments: list[str] = field(default=list)
     delay: float = 0
@@ -28,8 +41,14 @@ class Tool:
         if not self.delay:
             self.delay = 0
 
-    # def load_from_json(self):
-    #     pass
+    def check_paths_exist(self):
+        workdir = Path(self.workdir)
+        if not workdir.exists() or not workdir.is_dir():
+            raise WorkdirNotFoundOrInvalid
+        executable = workdir.joinpath(self.executable_path)
+        if not executable.exists() or not executable.is_file():
+            raise ExecutableNotFoundOrInvalid
+
 
 
 def is_xrd_running() -> bool:
@@ -76,19 +95,35 @@ if __name__ == '__main__':
     with open(json_file, 'r', encoding="utf-8") as user_file:
         json_contents = loads(user_file.read())
 
+    # Load tools
     for tool_info in json_contents:
-        print(*tool_info.items())
-        _tool: Tool = Tool(*tool_info.items())
+        _tool: Tool = Tool(**tool_info)
         tools_list.append(_tool)
+    del _tool
 
-    # Json to class objects
+    print("Mods found to launch:")
 
-    # Check if path exists/is valid
+    for tool in tools_list:
+        print(f"- {tool.mod_name}")
 
-    # print("Mods found to launch:")
-    # for file in executables:
-    #     print(f"- {file}")
     #
+    print("\nInspecting mod status:")
+    for tool in tools_list:
+        workdir = ""
+        executable = ""
+        print(f"\t- [{tool.mod_name}]:")
+        try:
+            tool.check_paths_exist()
+            executable = workdir = "OK"
+        except WorkdirNotFoundOrInvalid:
+            workdir = "Failed. Not Found or Not a Directory"
+            executable = "---"
+        except ExecutableNotFoundOrInvalid:
+            workdir = "OK"
+            executable = "Failed. Not Found or Not a Directory"
+        print(f"\t\tWorkdir: {workdir}\n\t\tExecutable: {executable}")
+    del workdir, executable
+
     # while not is_xrd_running():
     #     print("Waiting for Xrd to start")
     #     sleep(0.3)

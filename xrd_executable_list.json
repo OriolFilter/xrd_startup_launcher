@@ -1,8 +1,9 @@
 [
   {
     "mod_name": "kkots_rev2-wakeup-tool",
-    "arguments": [],
-    "executable_path": "kkots_rev2-wakeup-tool",
+    "arguments": ["-force"],
+    "workdir": "kkots_ggxrd_hitbox_overlay_2211",
+    "executable_path": "ggxrd_hitbox_injector64bit.exe",
     "delay": 0
   }
 ]

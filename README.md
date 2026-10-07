@@ -15,7 +15,8 @@ The file should look like the following:
   {
     "mod_name": "abcd_1234",
     "arguments": ["1","2","-XYZ"],
-    "executable_path": "path/to/folder",
+    "workdir": "path/to/workdir/folder",
+    "executable_path": "path/relative/to/workdir",
     "delay": 0
   },
   {}
