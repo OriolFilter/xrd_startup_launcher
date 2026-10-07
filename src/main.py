@@ -1,9 +1,11 @@
+import time
 from time import sleep
 import psutil
 from subprocess import Popen, DEVNULL
 from pathlib import Path
 from dataclasses import dataclass, field
 from json import loads
+from datetime import datetime, timedelta
 
 
 class WorkdirNotFoundOrInvalid(Exception):
@@ -24,7 +26,8 @@ class Tool:
     workdir: str
     executable_path: str
     arguments: list[str] = field(default=list)
-    delay: float = 0
+    delay: int = 0
+    skip: bool = False
 
     def __post_init__(self):
         required_attributes = [
@@ -48,7 +51,6 @@ class Tool:
         executable = workdir.joinpath(self.executable_path)
         if not executable.exists() or not executable.is_file():
             raise ExecutableNotFoundOrInvalid
-
 
 
 def is_xrd_running() -> bool:
@@ -101,12 +103,13 @@ if __name__ == '__main__':
         tools_list.append(_tool)
     del _tool
 
+    tools_list.sort(key=lambda x: x.delay, reverse=False)
+
     print("Mods found to launch:")
 
     for tool in tools_list:
         print(f"- {tool.mod_name}")
 
-    #
     print("\nInspecting mod status:")
     for tool in tools_list:
         workdir = ""
@@ -118,22 +121,33 @@ if __name__ == '__main__':
         except WorkdirNotFoundOrInvalid:
             workdir = "Failed. Not Found or Not a Directory"
             executable = "---"
+            tool.skip = True
         except ExecutableNotFoundOrInvalid:
             workdir = "OK"
             executable = "Failed. Not Found or Not a Directory"
+            tool.skip = True
         print(f"\t\tWorkdir: {workdir}\n\t\tExecutable: {executable}")
     del workdir, executable
+    while not is_xrd_running():
+        print("Waiting for Xrd to start")
+        sleep(0.2)
+    xrd_up_time = datetime.now()
 
-    # while not is_xrd_running():
-    #     print("Waiting for Xrd to start")
-    #     sleep(0.3)
-    # sleep(0)  # TODO check if it works/not, etc
-    #
-    # print("Xrd process found, proceeding to start the mods")
-    #
-    # # for file in executables:
-    # #     print(f"Launching {file}")
-    # #     if launch_exe(file):
-    # #         print("\tStatus: Successful")
-    # #     else:
-    # #         print("\tStatus: Failed")
+    print("Xrd process found, proceeding to start the mods")
+
+    for tool in tools_list:
+        if tool.skip:
+            print(f" [{tool.mod_name}] SKIPPED")
+        else:
+            tool: Tool
+            _last_second: int = 0
+            while (datetime.now() - xrd_up_time).seconds < timedelta(seconds=tool.delay).seconds:
+                if _last_second != (datetime.now() - xrd_up_time).seconds:
+                    print(
+                        f" [{tool.mod_name}] waiting ({(datetime.now() - xrd_up_time).seconds}s / {tool.delay}s)")  # TODO words
+                    _last_second = (datetime.now() - xrd_up_time).seconds
+
+                sleep(0.2)
+            del _last_second
+
+            print(f"Launching {tool.mod_name}")

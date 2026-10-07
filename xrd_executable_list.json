@@ -4,6 +4,6 @@
     "arguments": ["-force"],
     "workdir": "kkots_ggxrd_hitbox_overlay_2211",
     "executable_path": "ggxrd_hitbox_injector64bit.exe",
-    "delay": 0
+    "delay": 5
   }
 ]
