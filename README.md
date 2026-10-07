@@ -41,5 +41,5 @@ Therefore, all the paths must be relative to that location.
 This needs to be compiled from Windows, as it is intended to run through Proton.
 
 ```shell
-pyinstaller src/main.py  --clean -F --paths venv/lib/python3.14/site-packages --nowindow
+pyinstaller src/main.py --distpath binary_dump --name xrd_startup_launcher.exe  --clean -F --paths venv/lib/python3.14/site-packages --nowindow
 ```
