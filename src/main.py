@@ -58,13 +58,11 @@ def is_xrd_running() -> bool:
             return True
 
 
-def launch_exe(cwd: Path, executable: Path, args: [str]) -> bool:
+def launch_exe(tool: Tool) -> bool:
     """
     Launches a process for the respective .exe file
 
-    :param cwd: Workdir from which launch the .exe file. Assumes that always will be the parent dir from the .exe file.
-    :param executable: Filename to execute
-    :param args: Arguments to add/use
+    :param tool: Respective tool
     :return:
     """
     exe_full_path = ""
@@ -72,13 +70,13 @@ def launch_exe(cwd: Path, executable: Path, args: [str]) -> bool:
     process = Popen(
         shell=False,
         args=[
-            cwd.joinpath(executable).absolute(),
-            *args,
+            Path(tool.workdir).joinpath(tool.executable_path),
+            *tool.arguments
         ],
         stdin=None,
         stdout=DEVNULL,
         stderr=DEVNULL,
-        cwd=cwd,
+        cwd=Path(tool.workdir),
         start_new_session=True,
     )
 
@@ -143,10 +141,16 @@ if __name__ == '__main__':
             while (datetime.now() - xrd_up_time).seconds < timedelta(seconds=tool.delay).seconds:
                 if _last_second != (datetime.now() - xrd_up_time).seconds:
                     print(
-                        f" [{tool.mod_name}] waiting ({(datetime.now() - xrd_up_time).seconds}s / {tool.delay}s)")  # TODO words
+                        f" [{tool.mod_name}] waiting ({(datetime.now() - xrd_up_time).seconds}s / {tool.delay}s)")
                     _last_second = (datetime.now() - xrd_up_time).seconds
 
                 sleep(0.2)
             del _last_second
+            try:
+                launch_exe(tool)
+                print(f" [{tool.mod_name}] Launched\n")
+            except Exception as e:
+                print(f" [{tool.mod_name}] Failed to launch\n\tError: {e}")
 
             print(f"Launching {tool.mod_name}")
+    sleep(2)
