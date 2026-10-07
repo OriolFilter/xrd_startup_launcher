@@ -35,3 +35,11 @@ Since it will be executed through the `BootGGXrd.bat` file, proton will handle t
 This tool is meant to place the .exe in the directory `GUILTY GEAR Xrd -REVELATOR-/Binaries/Win32`.
 
 Therefore, all the paths must be relative to that location.
+
+## Compiling
+
+This needs to be compiled from Windows, as it is intended to run through Proton.
+
+```shell
+pyinstaller main.py  --clean -F --paths venv/lib/python3.14/site-packages --nowindow
+```
