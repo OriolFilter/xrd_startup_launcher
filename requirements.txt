@@ -1,1 +1,2 @@
-#TODO
+pywin32==311
+pywin32-ctypes==0.2.3
