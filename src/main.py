@@ -149,15 +149,15 @@ if __name__ == '__main__':
             print(f" [{tool.mod_name}] SKIPPED")
         else:
             tool: Tool
-            _last_second: int = 0
-            while (datetime.now() - xrd_up_time).seconds < timedelta(seconds=tool.delay).seconds:
-                if _last_second != (datetime.now() - xrd_up_time).seconds:
-                    print(
-                        f" [{tool.mod_name}] waiting ({(datetime.now() - xrd_up_time).seconds}s / {tool.delay}s)")
-                    _last_second = (datetime.now() - xrd_up_time).seconds
-
-                sleep(0.2)
-            del _last_second
+            # _last_second: int = 0
+            # while (datetime.now() - xrd_up_time).seconds < timedelta(seconds=tool.delay).seconds:
+            #     if _last_second != (datetime.now() - xrd_up_time).seconds:
+            #         print(
+            #             f" [{tool.mod_name}] waiting ({(datetime.now() - xrd_up_time).seconds}s / {tool.delay}s)")
+            #         _last_second = (datetime.now() - xrd_up_time).seconds
+            #
+            #     sleep(0.2)
+            # del _last_second
             try:
                 launch_exe(tool)
                 print(f" [{tool.mod_name}] Launched\n")
