@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from json import loads
 from datetime import datetime, timedelta
 import win32gui, win32process, win32api
+from abc import abstractmethod
 
 
 class WorkdirNotFoundOrInvalid(Exception):
@@ -23,21 +24,10 @@ class ExecutableNotFoundOrInvalid(Exception):
 class Tool:
     mod_name: str
     workdir: str
-    executable_path: str
-    arguments: list[str] = field(default=list)
     skip: bool = False
 
     def __post_init__(self):
-        required_attributes = [
-            "mod_name",
-            "executable_path"
-        ]
-        for attribute in required_attributes:
-            if not getattr(self, attribute):
-                raise Exception("mod_name field is required")
-
-        if not self.arguments:
-            self.arguments = []
+        self._post_init_checks()
 
     def check_paths_exist(self):
         workdir = Path(self.workdir)
@@ -46,6 +36,90 @@ class Tool:
         executable = workdir.joinpath(self.executable_path)
         if not executable.exists() or not executable.is_file():
             raise ExecutableNotFoundOrInvalid
+
+    def _post_init_checks(self):
+        self._missing_required_attributes()
+        self._class_specific_checks()
+
+    @property
+    @abstractmethod
+    def required_attributes(self) -> [str]:
+        pass
+
+    def _missing_required_attributes(self):
+        for attribute in ["mod_name"] + self.required_attributes:
+            if not getattr(self, attribute):
+                raise Exception(f"{attribute} field is required")
+
+    @abstractmethod
+    def _class_specific_checks(self):
+        pass
+
+    @abstractmethod
+    def launch(self):
+        """
+        Each one implements their own
+        """
+        pass
+
+
+class BinaryExecutor(Tool):
+    """
+    Reserved for mods/apps/etc that require a binary to be executed (.exe)
+    """
+    executable_path: str
+    arguments: list[str] = field(default=list)
+
+    def _class_specific_checks(self):
+        if not self.arguments:
+            self.arguments = []
+
+    @property
+    def required_attributes(self) -> [str]:
+        return ["executable_path"]
+
+    def launch(self) -> bool:
+        """
+        Launches a process for the respective .exe file
+
+        :param tool_object: Respective tool
+        :return:
+        """
+        exe_full_path = ""
+
+        process = Popen(
+            shell=False,
+            args=[
+                Path(self.workdir).joinpath(self.executable_path),
+                *self.arguments
+            ],
+            stdin=None,
+            stdout=DEVNULL,
+            stderr=DEVNULL,
+            cwd=Path(self.workdir),
+            start_new_session=True,
+        )
+
+        return True
+
+
+class DLLInjector(Tool):
+    """
+    Reserved for mods/apps/etc that require to inject DLL files without the need of executing binary files (.exe)
+    """
+
+    def launch(self):
+        raise Exception(NotImplementedError)
+
+    dll_paths: list[str]
+
+    @property
+    def required_attributes(self) -> [str]:
+        return ["dll_paths"]
+
+    def _class_specific_checks(self):
+        if not self.dll_paths:
+            raise Exception("DLL files need to be specified")
 
 
 def check_xrd_is_running() -> bool:
@@ -66,31 +140,6 @@ def check_xrd_is_running() -> bool:
     return True
 
 
-def launch_exe(tool: Tool) -> bool:
-    """
-    Launches a process for the respective .exe file
-
-    :param tool: Respective tool
-    :return:
-    """
-    exe_full_path = ""
-
-    process = Popen(
-        shell=False,
-        args=[
-            Path(tool.workdir).joinpath(tool.executable_path),
-            *tool.arguments
-        ],
-        stdin=None,
-        stdout=DEVNULL,
-        stderr=DEVNULL,
-        cwd=Path(tool.workdir),
-        start_new_session=True,
-    )
-
-    return True
-
-
 if __name__ == '__main__':
     tools_list: [Tool] = []
     json_file = Path("xrd_executable_list.json")
@@ -104,7 +153,11 @@ if __name__ == '__main__':
 
     # Load tools
     for tool_info in json_contents:
-        _tool: Tool = Tool(**tool_info)
+        tool_info: dict
+        if tool_info.get("dll_paths"):
+            _tool: Tool = DLLInjector(**tool_info)
+        else:
+            _tool: Tool = BinaryExecutor(**tool_info)
         tools_list.append(_tool)
     del _tool
 
@@ -112,25 +165,25 @@ if __name__ == '__main__':
 
     print("Mods found to launch:")
 
-    for tool in tools_list:
-        print(f"- {tool.mod_name}")
+    for tool_object in tools_list:
+        print(f"- {tool_object.mod_name}")
 
     print("\nInspecting mod status:")
-    for tool in tools_list:
+    for tool_object in tools_list:
         workdir = ""
         executable = ""
-        print(f"\t- [{tool.mod_name}]:")
+        print(f"\t- [{tool_object.mod_name}]:")
         try:
-            tool.check_paths_exist()
+            tool_object.check_paths_exist()
             executable = workdir = "OK"
         except WorkdirNotFoundOrInvalid:
             workdir = "Failed. Not Found or Not a Directory"
             executable = "---"
-            tool.skip = True
+            tool_object.skip = True
         except ExecutableNotFoundOrInvalid:
             workdir = "OK"
             executable = "Failed. Not Found or Not a Directory"
-            tool.skip = True
+            tool_object.skip = True
         print(f"\t\tWorkdir: {workdir}\n\t\tExecutable: {executable}")
     del workdir, executable
     while not check_xrd_is_running():
@@ -140,11 +193,11 @@ if __name__ == '__main__':
 
     print("Xrd process found, proceeding to start the mods")
 
-    for tool in tools_list:
-        if tool.skip:
-            print(f" [{tool.mod_name}] SKIPPED")
+    for tool_object in tools_list:
+        if tool_object.skip:
+            print(f" [{tool_object.mod_name}] SKIPPED")
         else:
-            tool: Tool
+            tool_object: Tool
             # _last_second: int = 0
             # while (datetime.now() - xrd_up_time).seconds < timedelta(seconds=tool.delay).seconds:
             #     if _last_second != (datetime.now() - xrd_up_time).seconds:
@@ -155,10 +208,10 @@ if __name__ == '__main__':
             #     sleep(0.2)
             # del _last_second
             try:
-                launch_exe(tool)
-                print(f" [{tool.mod_name}] Launched\n")
+                tool_object.launch()
+                print(f" [{tool_object.mod_name}] Launched\n")
             except Exception as e:
-                print(f" [{tool.mod_name}] Failed to launch\n\tError: {e}")
+                print(f" [{tool_object.mod_name}] Failed to launch\n\tError: {e}")
 
-            print(f"Launching {tool.mod_name}")
+            print(f"Launching {tool_object.mod_name}")
     sleep(2)
