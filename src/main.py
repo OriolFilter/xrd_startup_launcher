@@ -25,7 +25,6 @@ class Tool:
     workdir: str
     executable_path: str
     arguments: list[str] = field(default=list)
-    delay: int = 0
     skip: bool = False
 
     def __post_init__(self):
