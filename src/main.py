@@ -215,7 +215,7 @@ if __name__ == '__main__':
             workdir = "OK"
             files = "Failed. Not Found or Not a Directory"
             tool_object.skip = True
-        print(f"\t\tWorkdir: {workdir}\n\t\t{['DLLs','Executable'][isinstance(tool_object,BinaryExecutor]}: {files}")
+        print(f"\t\tWorkdir: {workdir}\n\t\t{['DLLs','Executable'][isinstance(tool_object,BinaryExecutor)]}: {files}")
     del workdir, executable
     while not check_xrd_is_running():
         print("Waiting for Xrd to start")
