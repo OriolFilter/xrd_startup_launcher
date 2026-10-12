@@ -18,11 +18,13 @@ import struct
 # May throw exceptions due to running win32gui/api/process functions, run in a try.
 def inject_multiple_dlls(list_of_dll_paths: [Path]):
     window_handle = win32gui.FindWindow("LaunchUnrealUWindowsClient", "Guilty Gear Xrd -REVELATOR-")
-
+    if window_handle == 0:
+        return "Guilty Gear Xrd is not open."
     thread_id, process_id = win32process.GetWindowThreadProcessId(window_handle)
     PROCESS_ALL_ACCESS = 0x1FFFFF
     process_handle = win32api.OpenProcess(PROCESS_ALL_ACCESS, 0, process_id)
-
+    if not process_handle:
+        return "Failed to open Guilty Gear Xrd's process."
     LIST_MODULES_32BIT = 1
 
     def find_module(name):
@@ -41,7 +43,6 @@ def inject_multiple_dlls(list_of_dll_paths: [Path]):
     modules_to_operate_on = []
     for dll_path in list_of_dll_paths:
         found = find_module(dll_path.name)
-
         if found == 0:
             modules_to_operate_on.append(dll_path.__str__())
 
@@ -53,7 +54,6 @@ def inject_multiple_dlls(list_of_dll_paths: [Path]):
 
     kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
 
-    # Inject
     VirtualAllocEx = kernel32.VirtualAllocEx
     VirtualAllocEx.argtypes = [wintypes.HANDLE, wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD, wintypes.DWORD]
     VirtualAllocEx.restype = wintypes.LPVOID
@@ -181,7 +181,6 @@ def inject_multiple_dlls(list_of_dll_paths: [Path]):
         wait_result = win32event.WaitForSingleObject(thread_handle, 0xFFFFFFFF)
         if wait_result == WAIT_OBJECT_0:
             exit_code = win32process.GetExitCodeThread(thread_handle)
-
             found_addr = find_module(Path(dll_path).name)
             if exit_code == found_addr:
                 retval = True
@@ -329,3 +328,11 @@ def inject_multiple_dlls(list_of_dll_paths: [Path]):
 
     VirtualFreeEx(int(process_handle), allocated_mem, 0, MEM_RELEASE)
     return retval
+
+    # Returns a str in case of error.
+    # Returns True in case of success.
+    # May throw exceptions due to running win32gui/api/process functions, run in a try.
+
+
+def check_xrd_open():
+    return win32gui.FindWindow("LaunchUnrealUWindowsClient", "Guilty Gear Xrd -REVELATOR-") != 0
