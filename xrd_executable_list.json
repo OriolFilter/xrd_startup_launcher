@@ -1,9 +1,15 @@
 [
   {
-    "mod_name": "kkots_rev2-wakeup-tool",
-    "arguments": ["-force"],
-    "workdir": "kkots_ggxrd_hitbox_overlay_2211",
-    "executable_path": "ggxrd_hitbox_injector64bit.exe",
-    "delay": 5
+    "mod_name": "ibrow19/GGXrdReplayTakeover",
+    "workdir": "ibrow19_GGXrdReplayTakeover",
+    "dll_paths": [
+      "GGXrdReplayTakeover.dll"
+    ]
+  },
+  {
+    "mod_name": "kkots/rev2-wakeup-tool",
+    "workdir": "kkots_rev2-wakeup-tool",
+    "executable_path": "GGXrdReversalTool.exe",
+    "arguments": []
   }
 ]
