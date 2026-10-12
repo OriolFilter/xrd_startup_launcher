@@ -237,11 +237,11 @@ if __name__ == '__main__':
             #
             #     sleep(0.2)
             # del _last_second
+            print(f"Launching {tool_object.mod_name}")
             try:
                 tool_object.launch()
                 print(f" [{tool_object.mod_name}] Launched\n")
             except Exception as e:
                 print(f" [{tool_object.mod_name}] Failed to launch\n\tError: {e}")
 
-            print(f"Launching {tool_object.mod_name}")
     sleep(2)
