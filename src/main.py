@@ -127,12 +127,13 @@ class DLLInjector(Tool):
     dll_paths: list[str]
 
     def launch(self):
-        # TODO error managment
         workdir = Path(self.workdir)
         list_of_dll_paths = []
         for dll_path in self.dll_paths:
             list_of_dll_paths.append(workdir.joinpath(dll_path))
-        inject_multiple_dlls(list_of_dll_paths)
+        feedback = inject_multiple_dlls(list_of_dll_paths)
+        if not isinstance(feedback, bool) and feedback != True:
+            raise Exception(feedback)
 
     @property
     def required_attributes(self) -> [str]:
