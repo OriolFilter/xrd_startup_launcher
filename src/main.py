@@ -1,10 +1,10 @@
 from time import sleep
-import psutil
 from subprocess import Popen, DEVNULL
 from pathlib import Path
 from dataclasses import dataclass, field
 from json import loads
 from datetime import datetime, timedelta
+import win32gui, win32process, win32api
 
 
 class WorkdirNotFoundOrInvalid(Exception):
@@ -52,10 +52,22 @@ class Tool:
             raise ExecutableNotFoundOrInvalid
 
 
-def is_xrd_running() -> bool:
-    for pid in psutil.process_iter():
-        if pid.name() == "GuiltyGearXrd.exe":
-            return True
+def check_xrd_is_running() -> bool:
+    """
+    Returns true if everything OK
+    :return:
+    """
+    window_handle = win32gui.FindWindow("LaunchUnrealUWindowsClient", "Guilty Gear Xrd -REVELATOR-")
+    if window_handle == 0:
+        """Xrd is not open"""
+        return False
+    thread_id, process_id = win32process.GetWindowThreadProcessId(window_handle)
+    PROCESS_ALL_ACCESS = 0x1FFFFF
+    process_handle = win32api.OpenProcess(PROCESS_ALL_ACCESS, 0, process_id)
+    if not process_handle:
+        """Failed to open Guilty Gear Xrd's process."""
+        return False
+    return True
 
 
 def launch_exe(tool: Tool) -> bool:
@@ -125,7 +137,7 @@ if __name__ == '__main__':
             tool.skip = True
         print(f"\t\tWorkdir: {workdir}\n\t\tExecutable: {executable}")
     del workdir, executable
-    while not is_xrd_running():
+    while not check_xrd_is_running():
         print("Waiting for Xrd to start")
         sleep(0.2)
     xrd_up_time = datetime.now()
