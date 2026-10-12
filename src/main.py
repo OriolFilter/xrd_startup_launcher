@@ -39,9 +39,6 @@ class Tool:
         if not self.arguments:
             self.arguments = []
 
-        if not self.delay:
-            self.delay = 0
-
     def check_paths_exist(self):
         workdir = Path(self.workdir)
         if not workdir.exists() or not workdir.is_dir():
@@ -111,7 +108,7 @@ if __name__ == '__main__':
         tools_list.append(_tool)
     del _tool
 
-    tools_list.sort(key=lambda x: x.delay, reverse=False)
+    tools_list.sort(key=lambda x: x.mod_name, reverse=False)
 
     print("Mods found to launch:")
 
