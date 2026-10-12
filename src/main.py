@@ -6,6 +6,7 @@ from json import loads
 from datetime import datetime, timedelta
 import win32gui, win32process, win32api
 from abc import abstractmethod
+from inject_dll import inject_multiple_dlls
 
 
 class WorkdirNotFoundOrInvalid(Exception):
@@ -67,7 +68,8 @@ class Tool:
         """
         pass
 
-@dataclass(kw_only = True)
+
+@dataclass(kw_only=True)
 class BinaryExecutor(Tool):
     """
     Reserved for mods/apps/etc that require a binary to be executed (.exe)
@@ -115,7 +117,8 @@ class BinaryExecutor(Tool):
 
         return True
 
-@dataclass(kw_only = True)
+
+@dataclass(kw_only=True)
 class DLLInjector(Tool):
     """
     Reserved for mods/apps/etc that require to inject DLL files without the need of executing binary files (.exe)
@@ -124,7 +127,12 @@ class DLLInjector(Tool):
     dll_paths: list[str]
 
     def launch(self):
-        raise Exception(NotImplementedError)
+        # TODO error managment
+        workdir = Path(self.workdir)
+        dll_path_list = []
+        for dll_path in self.dll_paths:
+            dll_path_list.append(workdir.joinpath(dll_path))
+        inject_multiple_dlls(self.dll_paths)
 
     @property
     def required_attributes(self) -> [str]:
