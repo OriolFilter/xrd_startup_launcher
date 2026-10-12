@@ -206,16 +206,16 @@ if __name__ == '__main__':
         print(f"\t- [{tool_object.mod_name}]:")
         try:
             tool_object.check_paths_exist()
-            executable = workdir = "OK"
+            files = workdir = "OK"
         except WorkdirNotFoundOrInvalid:
             workdir = "Failed. Not Found or Not a Directory"
-            executable = "---"
+            files = "---"
             tool_object.skip = True
         except DLLNotFoundOrInvalid:
             workdir = "OK"
-            executable = "Failed. Not Found or Not a Directory"
+            files = "Failed. Not Found or Not a Directory"
             tool_object.skip = True
-        print(f"\t\tWorkdir: {workdir}\n\t\tExecutable: {executable}")
+        print(f"\t\tWorkdir: {workdir}\n\t\t{['DLLs','Executable'][isinstance(tool_object,BinaryExecutor]}: {files}")
     del workdir, executable
     while not check_xrd_is_running():
         print("Waiting for Xrd to start")
