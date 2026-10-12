@@ -129,10 +129,10 @@ class DLLInjector(Tool):
     def launch(self):
         # TODO error managment
         workdir = Path(self.workdir)
-        dll_path_list = []
+        list_of_dll_paths = []
         for dll_path in self.dll_paths:
-            dll_path_list.append(workdir.joinpath(dll_path))
-        inject_multiple_dlls(self.dll_paths)
+            list_of_dll_paths.append(workdir.joinpath(dll_path))
+        inject_multiple_dlls(list_of_dll_paths)
 
     @property
     def required_attributes(self) -> [str]:
@@ -228,15 +228,6 @@ if __name__ == '__main__':
             print(f" [{tool_object.mod_name}] SKIPPED")
         else:
             tool_object: Tool
-            # _last_second: int = 0
-            # while (datetime.now() - xrd_up_time).seconds < timedelta(seconds=tool.delay).seconds:
-            #     if _last_second != (datetime.now() - xrd_up_time).seconds:
-            #         print(
-            #             f" [{tool.mod_name}] waiting ({(datetime.now() - xrd_up_time).seconds}s / {tool.delay}s)")
-            #         _last_second = (datetime.now() - xrd_up_time).seconds
-            #
-            #     sleep(0.2)
-            # del _last_second
             print(f"Launching {tool_object.mod_name}")
             try:
                 tool_object.launch()
