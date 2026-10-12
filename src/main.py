@@ -62,7 +62,7 @@ class Tool:
         """
         pass
 
-
+@dataclass(kw_only = True)
 class BinaryExecutor(Tool):
     """
     Reserved for mods/apps/etc that require a binary to be executed (.exe)
@@ -102,16 +102,16 @@ class BinaryExecutor(Tool):
 
         return True
 
-
+@dataclass(kw_only = True)
 class DLLInjector(Tool):
     """
     Reserved for mods/apps/etc that require to inject DLL files without the need of executing binary files (.exe)
     """
 
+    dll_paths: list[str]
+
     def launch(self):
         raise Exception(NotImplementedError)
-
-    dll_paths: list[str]
 
     @property
     def required_attributes(self) -> [str]:
