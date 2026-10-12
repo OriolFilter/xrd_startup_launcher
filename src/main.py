@@ -12,12 +12,21 @@ class WorkdirNotFoundOrInvalid(Exception):
     """
     Raised when the workdir is not located by the Tool class, or isn't a directory.
     """
+    # TODO take argument to display the name/path
 
 
 class ExecutableNotFoundOrInvalid(Exception):
     """
-    Raised when the workdir is not located by the Tool class, or isn't a file.
+    Raised when the executable/binary is not located, or isn't a file.
     """
+    # TODO take argument to display the name/path
+
+
+class DLLNotFoundOrInvalid(Exception):
+    """
+    Raised when the DLL to inject is not located, or isn't a file.
+    """
+    # TODO take argument to display the name/path
 
 
 @dataclass()
@@ -29,13 +38,9 @@ class Tool:
     def __post_init__(self):
         self._post_init_checks()
 
+    @abstractmethod
     def check_paths_exist(self):
-        workdir = Path(self.workdir)
-        if not workdir.exists() or not workdir.is_dir():
-            raise WorkdirNotFoundOrInvalid
-        executable = workdir.joinpath(self.executable_path)
-        if not executable.exists() or not executable.is_file():
-            raise ExecutableNotFoundOrInvalid
+        pass
 
     def _post_init_checks(self):
         self._missing_required_attributes()
@@ -77,6 +82,14 @@ class BinaryExecutor(Tool):
     @property
     def required_attributes(self) -> [str]:
         return ["executable_path"]
+
+    def check_paths_exist(self):
+        workdir = Path(self.workdir)
+        if not workdir.exists() or not workdir.is_dir():
+            raise WorkdirNotFoundOrInvalid
+        executable = workdir.joinpath(self.executable_path)
+        if not executable.exists() or not executable.is_file():
+            raise DLLNotFoundOrInvalid
 
     def launch(self) -> bool:
         """
@@ -120,6 +133,15 @@ class DLLInjector(Tool):
     def _class_specific_checks(self):
         if not self.dll_paths:
             raise Exception("DLL files need to be specified")
+
+    def check_paths_exist(self):
+        workdir = Path(self.workdir)
+        if not workdir.exists() or not workdir.is_dir():
+            raise WorkdirNotFoundOrInvalid
+        for dll_path in self.dll_paths:
+            dll_file = workdir.joinpath(dll_path)
+            if not dll_file.exists() or not dll_file.is_file():
+                raise DLLNotFoundOrInvalid
 
 
 def check_xrd_is_running() -> bool:
@@ -180,7 +202,7 @@ if __name__ == '__main__':
             workdir = "Failed. Not Found or Not a Directory"
             executable = "---"
             tool_object.skip = True
-        except ExecutableNotFoundOrInvalid:
+        except DLLNotFoundOrInvalid:
             workdir = "OK"
             executable = "Failed. Not Found or Not a Directory"
             tool_object.skip = True
