@@ -4,6 +4,8 @@ This is intended to be managed by [xrd_tool_downloader](https://github.com/Oriol
 
 Will be executed by the file `BootGGXrd.bat` file located within the Xrd folder as it starts Xrd.
 
+Waits until Xrd is running before executing the rest of tools/scheduled stuff.
+
 Note that this is not intended to be manually launched/applied.
 
 # How
@@ -59,12 +61,12 @@ pip3 install -r requirements.txt
 
 ## Building
 
-Locate yourself within the 
+Locate yourself within the project directory, you should be at the same level as those directories.
 
-#### Linux
-
-```shell
-pyinstaller src/main.py  --clean -F --hidden-import "textual.widgets._tab_pane" --hidden-import "rich._unicode_data.unicode17-0-0"
+```text
+.
+├── binary_dump
+├── src
 ```
 
 #### Windows
